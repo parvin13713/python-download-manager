@@ -11,11 +11,20 @@ def update_progress(value):
 def start_download():
     url = url_entry.get()
 
-    filename = download_file(url, update_progress)
+    try:
+        status_label.config(text="Downloading...")
+        
+        filename = download_file(url, update_progress)
 
-    status_label.config(
-        text=f"Downloaded: {filename}"
-    )
+        status_label.config(
+            text=f"Downloaded: {filename}"
+        )
+
+    except Exception as e:
+        status_label.config(
+            text="Download failed ❌"
+        )
+        print(e)
 
 
 window = tk.Tk()
