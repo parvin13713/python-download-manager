@@ -1,3 +1,4 @@
+import threading
 import tkinter as tk
 from tkinter import ttk
 from downloader import download_file
@@ -8,23 +9,37 @@ def update_progress(value):
     window.update_idletasks()
 
 
-def start_download():
-    url = url_entry.get()
-
+def download_thread(url):
     try:
-        status_label.config(text="Downloading...")
-        
         filename = download_file(url, update_progress)
 
         status_label.config(
             text=f"Downloaded: {filename}"
         )
 
+        download_button.config(state="normal")
+
     except Exception as e:
         status_label.config(
             text="Download failed ❌"
         )
         print(e)
+
+        download_button.config(state="normal")
+
+
+def start_download():
+    url = url_entry.get()
+
+    download_button.config(state="disabled")
+    status_label.config(text="Downloading...")
+
+    thread = threading.Thread(
+        target=download_thread,
+        args=(url,)
+    )
+
+    thread.start()
 
 
 window = tk.Tk()
