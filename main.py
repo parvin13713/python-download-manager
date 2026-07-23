@@ -1,6 +1,6 @@
 import threading
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 from downloader import download_file
 
 
@@ -11,10 +11,20 @@ def update_progress(value):
 
 def download_thread(url):
     try:
-        filename = download_file(url, update_progress)
+        save_path = filedialog.asksaveasfilename(
+            title="Save File",
+            initialfile=url.split("/")[-1]
+        )
+
+        if not save_path:
+            status_label.config(text="Download cancelled")
+            download_button.config(state="normal")
+            return
+
+        download_file(url, save_path, update_progress)
 
         status_label.config(
-            text=f"Downloaded: {filename}"
+            text="Download completed ✅"
         )
 
         download_button.config(state="normal")
@@ -23,6 +33,7 @@ def download_thread(url):
         status_label.config(
             text="Download failed ❌"
         )
+
         print(e)
 
         download_button.config(state="normal")
@@ -60,6 +71,7 @@ download_button = tk.Button(
     text="Start Download",
     command=start_download
 )
+
 download_button.pack(pady=20)
 
 
@@ -67,6 +79,7 @@ progress_bar = ttk.Progressbar(
     window,
     length=400
 )
+
 progress_bar.pack(pady=10)
 
 

@@ -1,23 +1,23 @@
 import requests
-from urllib.parse import urlparse
 
 
-def download_file(url, progress_callback):
-    parsed_url = urlparse(url)
+def download_file(url, save_path, progress_callback):
 
-    filename = parsed_url.path.split("/")[-1]
+    response = requests.get(
+        url,
+        stream=True
+    )
 
-    if not filename:
-        filename = "downloaded_file"
-
-    response = requests.get(url, stream=True)
-
-    total_size = int(response.headers.get("content-length", 0))
+    total_size = int(
+        response.headers.get("content-length", 0)
+    )
 
     downloaded = 0
 
-    with open(filename, "wb") as file:
+    with open(save_path, "wb") as file:
+
         for chunk in response.iter_content(chunk_size=1024):
+
             if chunk:
                 file.write(chunk)
 
@@ -27,4 +27,4 @@ def download_file(url, progress_callback):
                     percent = downloaded * 100 / total_size
                     progress_callback(percent)
 
-    return filename
+    return save_path
