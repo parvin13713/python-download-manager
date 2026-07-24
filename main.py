@@ -9,6 +9,7 @@ def update_progress(value):
     window.update_idletasks()
 
 
+
 def download_thread(url):
     try:
         save_path = filedialog.asksaveasfilename(
@@ -34,6 +35,7 @@ def download_thread(url):
             text="Download failed ❌"
         )
 
+        print(type(e))
         print(e)
 
         download_button.config(state="normal")

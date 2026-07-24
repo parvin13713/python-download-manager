@@ -16,9 +16,10 @@ def download_file(url, save_path, progress_callback):
 
     with open(save_path, "wb") as file:
 
-        for chunk in response.iter_content(chunk_size=1024):
+        for chunk in response.iter_content(chunk_size=1024 * 64):
 
             if chunk:
+
                 file.write(chunk)
 
                 downloaded += len(chunk)
