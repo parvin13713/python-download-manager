@@ -9,6 +9,8 @@ def download_file(url, save_path, progress_callback):
         stream=True
     )
 
+    response.raise_for_status()
+
     total_size = int(
         response.headers.get("content-length", 0)
     )
@@ -18,36 +20,34 @@ def download_file(url, save_path, progress_callback):
 
     with open(save_path, "wb") as file:
 
-        for chunk in response.iter_content(chunk_size=1024 * 64):
+        for chunk in response.iter_content(chunk_size=64 * 1024):
 
-            if chunk:
+            if not chunk:
+                continue
 
-                file.write(chunk)
+            file.write(chunk)
 
-                downloaded += len(chunk)
+            downloaded += len(chunk)
 
-                elapsed = time.time() - start_time
+            elapsed = time.time() - start_time
 
-                speed = downloaded / elapsed if elapsed > 0 else 0
+            speed = downloaded / elapsed if elapsed > 0 else 0
 
-                if total_size:
-                    percent = downloaded * 100 / total_size
-                else:
-                    percent = 0
+            if total_size > 0:
+                percent = (downloaded / total_size) * 100
+            else:
+                percent = 0
 
-                print(
-                    "PROGRESS:",
-                    downloaded,
-                    "bytes",
-                    "speed:",
-                    speed
-                )
+            print(
+                f"PROGRESS: {percent:.1f}% "
+                f"({downloaded}/{total_size})"
+            )
 
-                progress_callback(
-                    percent,
-                    downloaded,
-                    total_size,
-                    speed
-                )
+            progress_callback(
+                percent,
+                downloaded,
+                total_size,
+                speed
+            )
 
     return save_path
