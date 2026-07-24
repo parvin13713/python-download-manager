@@ -1,4 +1,5 @@
 import requests
+import time
 
 
 def download_file(url, save_path, progress_callback):
@@ -13,6 +14,7 @@ def download_file(url, save_path, progress_callback):
     )
 
     downloaded = 0
+    start_time = time.time()
 
     with open(save_path, "wb") as file:
 
@@ -24,8 +26,28 @@ def download_file(url, save_path, progress_callback):
 
                 downloaded += len(chunk)
 
+                elapsed = time.time() - start_time
+
+                speed = downloaded / elapsed if elapsed > 0 else 0
+
                 if total_size:
                     percent = downloaded * 100 / total_size
-                    progress_callback(percent)
+                else:
+                    percent = 0
+
+                print(
+                    "PROGRESS:",
+                    downloaded,
+                    "bytes",
+                    "speed:",
+                    speed
+                )
+
+                progress_callback(
+                    percent,
+                    downloaded,
+                    total_size,
+                    speed
+                )
 
     return save_path
