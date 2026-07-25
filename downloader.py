@@ -6,7 +6,8 @@ def download_file(url, save_path, progress_callback):
 
     response = requests.get(
         url,
-        stream=True
+        stream=True,
+        timeout=30
     )
 
     response.raise_for_status()
@@ -34,20 +35,22 @@ def download_file(url, save_path, progress_callback):
             speed = downloaded / elapsed if elapsed > 0 else 0
 
             if total_size > 0:
-                percent = (downloaded / total_size) * 100
+                percent = downloaded / total_size * 100
+
+                remaining = total_size - downloaded
+
+                eta = remaining / speed if speed > 0 else 0
+
             else:
                 percent = 0
-
-            print(
-                f"PROGRESS: {percent:.1f}% "
-                f"({downloaded}/{total_size})"
-            )
+                eta = 0
 
             progress_callback(
                 percent,
                 downloaded,
                 total_size,
-                speed
+                speed,
+                eta
             )
 
     return save_path
