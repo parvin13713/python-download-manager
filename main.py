@@ -8,6 +8,8 @@ from downloader import download_file
 
 progress_queue = queue.Queue()
 
+cancel_event = threading.Event()
+
 
 def update_gui():
 
@@ -23,13 +25,16 @@ def update_gui():
                 eta
             ) = progress_queue.get_nowait()
 
+
             progress_bar["value"] = percent
+
 
             downloaded_mb = downloaded / (1024 * 1024)
 
-            total_mb = total_size / (1024 * 1024) if total_size else 0
+            total_mb = total_size / (1024 * 1024)
 
             speed_mb = speed / (1024 * 1024)
+
 
             if eta > 0:
 
@@ -43,29 +48,33 @@ def update_gui():
 
                 eta_text = "--:--"
 
+
             info_label.config(
 
                 text=(
-                    f"Downloaded : {downloaded_mb:.2f} MB / {total_mb:.2f} MB\n"
-                    f"Speed      : {speed_mb:.2f} MB/s\n"
-                    f"Remaining  : {eta_text}"
+                    f"Downloaded: {downloaded_mb:.2f} MB / {total_mb:.2f} MB\n"
+                    f"Speed: {speed_mb:.2f} MB/s\n"
+                    f"Remaining: {eta_text}"
                 )
 
             )
+
 
     except queue.Empty:
 
         pass
 
+
     window.after(100, update_gui)
 
 
+
 def progress_callback(
-    percent,
-    downloaded,
-    total_size,
-    speed,
-    eta
+        percent,
+        downloaded,
+        total_size,
+        speed,
+        eta
 ):
 
     progress_queue.put(
@@ -81,6 +90,7 @@ def progress_callback(
     )
 
 
+
 def download_thread(url):
 
     try:
@@ -93,29 +103,44 @@ def download_thread(url):
 
         )
 
+
         if not save_path:
 
-            status_label.config(text="Download cancelled")
-
-            download_button.config(state="normal")
+            download_button.config(
+                state="normal"
+            )
 
             return
 
-        download_file(
+
+        cancel_event.clear()
+
+
+        result = download_file(
 
             url,
 
             save_path,
 
-            progress_callback
+            progress_callback,
+
+            cancel_event
 
         )
 
-        status_label.config(
 
-            text="Download completed ✅"
+        if result == "cancelled":
 
-        )
+            status_label.config(
+                text="Download cancelled ⛔"
+            )
+
+        else:
+
+            status_label.config(
+                text="Download completed ✅"
+            )
+
 
     except Exception as e:
 
@@ -125,6 +150,7 @@ def download_thread(url):
 
         )
 
+
     download_button.config(
 
         state="normal"
@@ -132,28 +158,46 @@ def download_thread(url):
     )
 
 
+    cancel_button.config(
+
+        state="disabled"
+
+    )
+
+
+
 def start_download():
 
     url = url_entry.get().strip()
+
 
     if not url:
 
         status_label.config(
 
-            text="Please enter a URL"
+            text="Enter URL"
 
         )
 
         return
 
-    progress_bar["value"] = 0
 
-    info_label.config(
+    cancel_event.clear()
 
-        text="Downloaded : 0 MB / 0 MB\n"
-             "Speed      : 0 MB/s\n"
-             "Remaining  : --:--"
+
+    download_button.config(
+
+        state="disabled"
+
     )
+
+
+    cancel_button.config(
+
+        state="normal"
+
+    )
+
 
     status_label.config(
 
@@ -161,11 +205,6 @@ def start_download():
 
     )
 
-    download_button.config(
-
-        state="disabled"
-
-    )
 
     threading.Thread(
 
@@ -178,13 +217,27 @@ def start_download():
     ).start()
 
 
+
+def cancel_download():
+
+    cancel_event.set()
+
+    status_label.config(
+
+        text="Cancelling..."
+
+    )
+
+
+
 window = tk.Tk()
 
 window.title("Mini Download Manager")
 
-window.geometry("520x320")
+window.geometry("520x360")
 
 window.resizable(False, False)
+
 
 
 tk.Label(
@@ -193,11 +246,8 @@ tk.Label(
 
     text="Download URL:"
 
-).pack(
+).pack(pady=10)
 
-    pady=(15, 5)
-
-)
 
 
 url_entry = tk.Entry(
@@ -211,6 +261,7 @@ url_entry = tk.Entry(
 url_entry.pack()
 
 
+
 download_button = tk.Button(
 
     window,
@@ -221,28 +272,40 @@ download_button = tk.Button(
 
 )
 
-download_button.pack(
+download_button.pack(pady=10)
 
-    pady=15
+
+
+cancel_button = tk.Button(
+
+    window,
+
+    text="Cancel Download",
+
+    command=cancel_download,
+
+    state="disabled"
 
 )
+
+cancel_button.pack()
+
 
 
 progress_bar = ttk.Progressbar(
 
     window,
 
-    orient="horizontal",
-
-    mode="determinate",
-
     length=450,
 
-    maximum=100
+    maximum=100,
+
+    mode="determinate"
 
 )
 
-progress_bar.pack()
+progress_bar.pack(pady=15)
+
 
 
 info_label = tk.Label(
@@ -250,22 +313,17 @@ info_label = tk.Label(
     window,
 
     text=(
-        "Downloaded : 0 MB / 0 MB\n"
-        "Speed      : 0 MB/s\n"
-        "Remaining  : --:--"
+        "Downloaded: 0 MB / 0 MB\n"
+        "Speed: 0 MB/s\n"
+        "Remaining: --:--"
     ),
-
-    justify="left",
 
     font=("Consolas", 10)
 
 )
 
-info_label.pack(
+info_label.pack()
 
-    pady=10
-
-)
 
 
 status_label = tk.Label(
@@ -276,9 +334,11 @@ status_label = tk.Label(
 
 )
 
-status_label.pack()
+status_label.pack(pady=10)
+
 
 
 update_gui()
+
 
 window.mainloop()

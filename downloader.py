@@ -3,7 +3,7 @@ import time
 import os
 
 
-def download_file(url, save_path, progress_callback):
+def download_file(url, save_path, progress_callback, cancel_event):
 
     downloaded = 0
 
@@ -49,6 +49,11 @@ def download_file(url, save_path, progress_callback):
         for chunk in response.iter_content(
             chunk_size=64 * 1024
         ):
+
+            if cancel_event.is_set():
+
+                return "cancelled"
+
 
             if not chunk:
                 continue
@@ -106,4 +111,4 @@ def download_file(url, save_path, progress_callback):
             )
 
 
-    return save_path
+    return "completed"
