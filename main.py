@@ -2,6 +2,9 @@ import threading
 import queue
 import tkinter as tk
 from tkinter import ttk, filedialog
+from datetime import datetime
+import json
+import os
 
 from downloader import download_file
 
@@ -9,6 +12,107 @@ from downloader import download_file
 progress_queue = queue.Queue()
 
 cancel_event = threading.Event()
+
+history_file = "downloads.json"
+
+
+
+def load_history():
+
+    if os.path.exists(history_file):
+
+        with open(history_file, "r", encoding="utf-8") as file:
+
+            return json.load(file)
+
+    return []
+
+
+
+def save_history(data):
+
+    with open(history_file, "w", encoding="utf-8") as file:
+
+        json.dump(
+            data,
+            file,
+            indent=4,
+            ensure_ascii=False
+        )
+
+
+
+def add_history(url, path, status):
+
+    history = load_history()
+
+    history.append(
+
+        {
+            "url": url,
+            "file": path,
+            "status": status,
+            "date": datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        }
+
+    )
+
+    save_history(history)
+
+
+
+def show_history():
+
+    history_window = tk.Toplevel(window)
+
+    history_window.title(
+        "Download History"
+    )
+
+    history_window.geometry(
+        "600x300"
+    )
+
+
+    text = tk.Text(
+        history_window,
+        width=70,
+        height=15
+    )
+
+    text.pack(
+        padx=10,
+        pady=10
+    )
+
+
+    history = load_history()
+
+
+    if not history:
+
+        text.insert(
+            tk.END,
+            "No downloads yet."
+        )
+
+    else:
+
+        for item in history:
+
+            text.insert(
+
+                tk.END,
+
+                f"{item['file']}\n"
+                f"Status: {item['status']}\n"
+                f"Date: {item['date']}\n"
+                f"{'-'*40}\n"
+
+            )
+
 
 
 def update_gui():
@@ -23,10 +127,13 @@ def update_gui():
                 total_size,
                 speed,
                 eta
+
             ) = progress_queue.get_nowait()
 
 
+
             progress_bar["value"] = percent
+
 
 
             downloaded_mb = downloaded / (1024 * 1024)
@@ -34,6 +141,7 @@ def update_gui():
             total_mb = total_size / (1024 * 1024)
 
             speed_mb = speed / (1024 * 1024)
+
 
 
             if eta > 0:
@@ -49,13 +157,13 @@ def update_gui():
                 eta_text = "--:--"
 
 
+
             info_label.config(
 
-                text=(
-                    f"Downloaded: {downloaded_mb:.2f} MB / {total_mb:.2f} MB\n"
-                    f"Speed: {speed_mb:.2f} MB/s\n"
-                    f"Remaining: {eta_text}"
-                )
+                text=
+                f"Downloaded: {downloaded_mb:.2f} MB / {total_mb:.2f} MB\n"
+                f"Speed: {speed_mb:.2f} MB/s\n"
+                f"Remaining: {eta_text}"
 
             )
 
@@ -65,7 +173,11 @@ def update_gui():
         pass
 
 
-    window.after(100, update_gui)
+
+    window.after(
+        100,
+        update_gui
+    )
 
 
 
@@ -95,6 +207,7 @@ def download_thread(url):
 
     try:
 
+
         save_path = filedialog.asksaveasfilename(
 
             title="Save File",
@@ -113,7 +226,9 @@ def download_thread(url):
             return
 
 
+
         cancel_event.clear()
+
 
 
         result = download_file(
@@ -129,26 +244,55 @@ def download_thread(url):
         )
 
 
+
         if result == "cancelled":
 
             status_label.config(
+
                 text="Download cancelled ⛔"
+
             )
+
+            add_history(
+
+                url,
+
+                save_path,
+
+                "Cancelled"
+
+            )
+
 
         else:
 
             status_label.config(
+
                 text="Download completed ✅"
+
+            )
+
+            add_history(
+
+                url,
+
+                save_path,
+
+                "Completed"
+
             )
 
 
+
     except Exception as e:
+
 
         status_label.config(
 
             text=f"Error: {e}"
 
         )
+
 
 
     download_button.config(
@@ -168,21 +312,15 @@ def download_thread(url):
 
 def start_download():
 
+
     url = url_entry.get().strip()
+
 
 
     if not url:
 
-        status_label.config(
-
-            text="Enter URL"
-
-        )
-
         return
 
-
-    cancel_event.clear()
 
 
     download_button.config(
@@ -206,6 +344,7 @@ def start_download():
     )
 
 
+
     threading.Thread(
 
         target=download_thread,
@@ -215,6 +354,7 @@ def start_download():
         daemon=True
 
     ).start()
+
 
 
 
@@ -232,11 +372,13 @@ def cancel_download():
 
 window = tk.Tk()
 
-window.title("Mini Download Manager")
+window.title(
+    "Mini Download Manager"
+)
 
-window.geometry("520x360")
-
-window.resizable(False, False)
+window.geometry(
+    "520x430"
+)
 
 
 
@@ -246,7 +388,9 @@ tk.Label(
 
     text="Download URL:"
 
-).pack(pady=10)
+).pack(
+    pady=10
+)
 
 
 
@@ -272,7 +416,9 @@ download_button = tk.Button(
 
 )
 
-download_button.pack(pady=10)
+download_button.pack(
+    pady=10
+)
 
 
 
@@ -292,19 +438,35 @@ cancel_button.pack()
 
 
 
+history_button = tk.Button(
+
+    window,
+
+    text="Download History",
+
+    command=show_history
+
+)
+
+history_button.pack(
+    pady=5
+)
+
+
+
 progress_bar = ttk.Progressbar(
 
     window,
 
     length=450,
 
-    maximum=100,
-
-    mode="determinate"
+    maximum=100
 
 )
 
-progress_bar.pack(pady=15)
+progress_bar.pack(
+    pady=15
+)
 
 
 
@@ -312,13 +474,10 @@ info_label = tk.Label(
 
     window,
 
-    text=(
-        "Downloaded: 0 MB / 0 MB\n"
-        "Speed: 0 MB/s\n"
-        "Remaining: --:--"
-    ),
-
-    font=("Consolas", 10)
+    text=
+    "Downloaded: 0 MB / 0 MB\n"
+    "Speed: 0 MB/s\n"
+    "Remaining: --:--"
 
 )
 
@@ -334,7 +493,9 @@ status_label = tk.Label(
 
 )
 
-status_label.pack(pady=10)
+status_label.pack(
+    pady=10
+)
 
 
 
