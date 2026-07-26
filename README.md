@@ -32,4 +32,14 @@ This project was created to learn real-world Python concepts such as GUI develop
 
 ## Project Structure 📁
 
-
+```text
+python-download-manager/
+│
+├── main.py              # Main application source code
+├── run.bat              # Windows launcher script
+├── downloads.json       # Stores download information
+├── MDM.png              # Application screenshot
+├── README.md            # Project documentation
+├── requirements.txt     # Python dependencies
+└── .venv/               # Virtual environment (local only)
+```
