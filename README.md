@@ -19,7 +19,7 @@ This project was created to learn real-world Python concepts such as GUI develop
 
 ## Screenshots 📸
 
-(Add screenshots here later)
+<img src="MDM.png" width="600">
 
 ## Technologies Used 🛠️
 
@@ -31,9 +31,5 @@ This project was created to learn real-world Python concepts such as GUI develop
 - Git & GitHub
 
 ## Project Structure 📁
-## Screenshot
 
 
-<img src="MDM.png" width="600">
-
-![Download Manager](MDM.png)
