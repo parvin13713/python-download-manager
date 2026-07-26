@@ -31,3 +31,6 @@ This project was created to learn real-world Python concepts such as GUI develop
 - Git & GitHub
 
 ## Project Structure 📁
+## Screenshot
+
+![Download Manager](screenshots/MDM.png)
