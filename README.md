@@ -33,6 +33,7 @@ This project was created to learn real-world Python concepts such as GUI develop
 ## Project Structure 📁
 ## Screenshot
 
-## Screenshot
+
+<img src="MDM.png" width="600">
 
 ![Download Manager](MDM.png)
